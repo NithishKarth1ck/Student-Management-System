@@ -28,18 +28,20 @@ public class SecurityConfig {
         AuthenticationFilter authenticationFilter = new AuthenticationFilter(customAuthenticationManager);
         authenticationFilter.setFilterProcessesUrl("/authenticate");
         http        
-           // .headers().frameOptions().disable() // New Line: the h2 console runs on a "frame". By default, Spring Security prevents rendering within an iframe. This line disables its prevention.
-           // .and()
-            .csrf().disable()
-            .authorizeRequests()  
+           // .headers(headers -> headers.frameOptions(frame -> frame.disable())) // New Line: the h2 console runs on a "frame". By default, Spring Security prevents rendering within an iframe. This line disables its prevention.
+           
+            .csrf(csrf -> csrf.disable())
+            .authorizeRequests(auth -> auth 
            // .antMatchers("/h2/**").permitAll() // New Line: allows us to access the h2 console without the need to authenticate. ' ** '  instead of ' * ' because multiple path levels will follow /h2.
             .antMatchers(HttpMethod.POST, SecurityConstants.REGISTER_PATH).permitAll()
             .anyRequest().authenticated()
-            .and()
+            )
+            
             .addFilterBefore(new ExceptionHandlerFilter(), AuthenticationFilter.class)
             .addFilter(authenticationFilter)
             .addFilterAfter(new JWTAuthorizationFilter(), AuthenticationFilter.class)
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }
     
